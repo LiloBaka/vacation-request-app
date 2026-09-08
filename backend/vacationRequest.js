@@ -104,6 +104,26 @@ function validateCreateRequest(input) {
     };
 }
 
+function validateRejection(input) {
+    const reason = normalizeString(input?.reason);
+
+    if (!reason) {
+        return {
+            valid: false,
+            details: {
+                reason: 'Причина отклонения обязательна',
+            },
+        };
+    }
+
+    return {
+        valid: true,
+        value: {
+            reason,
+        },
+    };
+}
+
 function createVacationRequest(input) {
     return {
         id: crypto.randomUUID(),
@@ -118,8 +138,25 @@ function createVacationRequest(input) {
     };
 }
 
+function approveVacationRequest(request) {
+    request.status = 'approved';
+    request.rejectionReason = null;
+
+    return request;
+}
+
+function rejectVacationRequest(request, reason) {
+    request.status = 'rejected';
+    request.rejectionReason = reason;
+
+    return request;
+}
+
 module.exports = {
     calculateVacationDays,
     createVacationRequest,
     validateCreateRequest,
+    validateRejection,
+    approveVacationRequest,
+    rejectVacationRequest,
 };
