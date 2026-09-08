@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Заявки на отпуск</title>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 
 <body>
@@ -52,6 +52,17 @@
         <section class="requests-section">
             <div class="section-header">
                 <h2>Список заявок</h2>
+
+                <div class="filter">
+                    <label for="status-filter">Статус</label>
+
+                    <select id="status-filter">
+                        <option value="">Все</option>
+                        <option value="pending">Ожидает</option>
+                        <option value="approved">Одобрена</option>
+                        <option value="rejected">Отклонена</option>
+                    </select>
+                </div>
             </div>
 
             <div id="list-message" class="message">

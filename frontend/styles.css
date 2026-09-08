@@ -13,7 +13,8 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+select {
     font: inherit;
 }
 
@@ -67,7 +68,8 @@ label {
 }
 
 input,
-textarea {
+textarea,
+select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #d1d5db;
@@ -88,10 +90,37 @@ button {
     color: #ffffff;
 }
 
+.button-secondary {
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid #d1d5db;
+}
+
+.button-danger {
+    background: #b91c1c;
+}
+
 .section-header {
     display: flex;
-    align-items: center;
+    align-items: end;
     justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+
+.section-header h2 {
+    margin-bottom: 0;
+}
+
+.filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter select {
+    width: auto;
+    min-width: 150px;
 }
 
 .requests-list {
@@ -126,7 +155,7 @@ button {
 
 .request-details div {
     display: grid;
-    grid-template-columns: 140px 1fr;
+    grid-template-columns: 160px 1fr;
     gap: 12px;
 }
 
@@ -161,6 +190,28 @@ button {
     color: #991b1b;
 }
 
+.request-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.reject-form {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.reject-form textarea {
+    margin-top: 8px;
+}
+
+.reject-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
 .message {
     margin-bottom: 16px;
     color: #6b7280;
@@ -173,6 +224,11 @@ button {
     color: #991b1b;
 }
 
+.request-error {
+    margin-top: 12px;
+    margin-bottom: 0;
+}
+
 .hidden {
     display: none;
 }
@@ -183,6 +239,20 @@ button {
         gap: 0;
     }
 
+    .section-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .filter {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .filter select {
+        width: 100%;
+    }
+
     .request-card-header {
         flex-direction: column;
     }
@@ -190,5 +260,11 @@ button {
     .request-details div {
         grid-template-columns: 1fr;
         gap: 4px;
+    }
+
+    .request-actions,
+    .reject-form-actions {
+        align-items: stretch;
+        flex-direction: column;
     }
 }
