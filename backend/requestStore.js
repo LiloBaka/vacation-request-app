@@ -1,7 +1,11 @@
 const requests = [];
 
-function getAllRequests() {
-    return requests;
+function getAllRequests(status) {
+    if (!status) {
+        return requests;
+    }
+
+    return requests.filter((request) => request.status === status);
 }
 
 function findRequestById(id) {

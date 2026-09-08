@@ -1,4 +1,12 @@
+const { randomUUID } = require('node:crypto');
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const REQUEST_STATUSES = [
+    'pending',
+    'approved',
+    'rejected',
+];
 
 function normalizeString(value) {
     return typeof value === 'string' ? value.trim() : '';
@@ -43,6 +51,10 @@ function calculateVacationDays(startDate, endDate) {
     }
 
     return Math.floor((endTimestamp - startTimestamp) / MS_PER_DAY) + 1;
+}
+
+function isValidStatus(status) {
+    return REQUEST_STATUSES.includes(status);
 }
 
 function validateCreateRequest(input) {
@@ -126,7 +138,7 @@ function validateRejection(input) {
 
 function createVacationRequest(input) {
     return {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         employeeName: input.employeeName,
         startDate: input.startDate,
         endDate: input.endDate,
@@ -153,7 +165,9 @@ function rejectVacationRequest(request, reason) {
 }
 
 module.exports = {
+    REQUEST_STATUSES,
     calculateVacationDays,
+    isValidStatus,
     createVacationRequest,
     validateCreateRequest,
     validateRejection,
