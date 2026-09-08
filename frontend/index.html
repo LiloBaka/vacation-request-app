@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заявки на отпуск</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <main class="container">
+        <header class="page-header">
+            <h1>Заявки на отпуск</h1>
+            <p>Создание и просмотр заявок сотрудников</p>
+        </header>
+
+        <section class="card">
+            <h2>Новая заявка</h2>
+
+            <form id="request-form">
+                <div class="form-group">
+                    <label for="employeeName">ФИО</label>
+                    <input id="employeeName" name="employeeName" type="text">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">Дата с</label>
+                        <input id="startDate" name="startDate" type="date">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="endDate">Дата по</label>
+                        <input id="endDate" name="endDate" type="date">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reason">Причина</label>
+                    <textarea id="reason" name="reason" rows="4"></textarea>
+                </div>
+
+                <div id="form-error" class="message message-error hidden" role="alert"></div>
+
+                <button type="submit">
+                    Отправить заявку
+                </button>
+            </form>
+        </section>
+
+        <section class="requests-section">
+            <div class="section-header">
+                <h2>Список заявок</h2>
+            </div>
+
+            <div id="list-message" class="message">
+                Загрузка заявок...
+            </div>
+
+            <div id="requests-list" class="requests-list"></div>
+        </section>
+    </main>
+
+    <script src="/app.js" defer></script>
+</body>
+
+</html>

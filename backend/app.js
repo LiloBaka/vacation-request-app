@@ -1,3 +1,4 @@
+const path = require('node:path');
 const express = require('express');
 
 const {
@@ -17,7 +18,10 @@ const {
 
 const app = express();
 
+const frontendPath = path.join(__dirname, '..', 'frontend');
+
 app.use(express.json());
+app.use(express.static(frontendPath));
 
 function sendError(res, statusCode, error, details) {
   const response = {
