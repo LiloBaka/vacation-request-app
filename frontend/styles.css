@@ -90,6 +90,12 @@ button {
     color: #ffffff;
 }
 
+button:disabled,
+select:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .button-secondary {
     background: #ffffff;
     color: #111827;

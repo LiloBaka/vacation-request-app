@@ -1,4 +1,5 @@
 const requestForm = document.querySelector('#request-form');
+const submitButton = document.querySelector('#submit-button');
 const requestsList = document.querySelector('#requests-list');
 const listMessage = document.querySelector('#list-message');
 const formError = document.querySelector('#form-error');
@@ -9,6 +10,11 @@ const statusLabels = {
     approved: 'Одобрена',
     rejected: 'Отклонена',
 };
+
+let isSubmitting = false;
+let isLoadingRequests = false;
+
+const decisionRequestsInFlight = new Set();
 
 function formatDate(date) {
     const [year, month, day] = date.split('-');
@@ -54,6 +60,7 @@ function createRequestError() {
         'message message-error request-error hidden';
 
     error.setAttribute('role', 'alert');
+    error.setAttribute('aria-live', 'polite');
 
     return error;
 }
@@ -63,12 +70,36 @@ function showRequestError(element, message) {
     element.classList.remove('hidden');
 }
 
-async function approveRequest(id, errorElement) {
-    errorElement.classList.add('hidden');
+function hideRequestError(element) {
+    element.textContent = '';
+    element.classList.add('hidden');
+}
+
+function setButtonsDisabled(container, disabled) {
+    const buttons = container.querySelectorAll('button');
+
+    buttons.forEach((button) => {
+        button.disabled = disabled;
+    });
+}
+
+async function approveRequest(
+    request,
+    controls,
+    errorElement,
+) {
+    if (decisionRequestsInFlight.has(request.id)) {
+        return;
+    }
+
+    decisionRequestsInFlight.add(request.id);
+
+    hideRequestError(errorElement);
+    setButtonsDisabled(controls, true);
 
     try {
         const response = await fetch(
-            `/api/requests/${id}/approve`,
+            `/api/requests/${request.id}/approve`,
             {
                 method: 'PATCH',
             },
@@ -90,17 +121,30 @@ async function approveRequest(id, errorElement) {
             errorElement,
             `Не удалось одобрить заявку: ${error.message}`,
         );
+    } finally {
+        decisionRequestsInFlight.delete(request.id);
+
+        if (controls.isConnected) {
+            setButtonsDisabled(controls, false);
+        }
     }
 }
 
 async function rejectRequest(
-    id,
+    request,
     reason,
+    controls,
     errorElement,
 ) {
-    errorElement.classList.add('hidden');
+    if (decisionRequestsInFlight.has(request.id)) {
+        return;
+    }
 
-    if (!reason.trim()) {
+    const normalizedReason = reason.trim();
+
+    hideRequestError(errorElement);
+
+    if (!normalizedReason) {
         showRequestError(
             errorElement,
             'Причина отклонения обязательна',
@@ -108,16 +152,19 @@ async function rejectRequest(
         return;
     }
 
+    decisionRequestsInFlight.add(request.id);
+    setButtonsDisabled(controls, true);
+
     try {
         const response = await fetch(
-            `/api/requests/${id}/reject`,
+            `/api/requests/${request.id}/reject`,
             {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    reason,
+                    reason: normalizedReason,
                 }),
             },
         );
@@ -138,6 +185,12 @@ async function rejectRequest(
             errorElement,
             `Не удалось отклонить заявку: ${error.message}`,
         );
+    } finally {
+        decisionRequestsInFlight.delete(request.id);
+
+        if (controls.isConnected) {
+            setButtonsDisabled(controls, false);
+        }
     }
 }
 
@@ -159,11 +212,16 @@ function createRequestActions(request, errorElement) {
     const rejectForm = document.createElement('div');
     rejectForm.className = 'reject-form hidden';
 
+    const rejectReasonId = `reject-reason-${request.id}`;
+
     const rejectLabel = document.createElement('label');
+    rejectLabel.htmlFor = rejectReasonId;
     rejectLabel.textContent = 'Причина отклонения';
 
     const rejectReason = document.createElement('textarea');
+    rejectReason.id = rejectReasonId;
     rejectReason.rows = 3;
+    rejectReason.required = true;
 
     const rejectFormActions = document.createElement('div');
     rejectFormActions.className = 'reject-form-actions';
@@ -183,10 +241,15 @@ function createRequestActions(request, errorElement) {
     cancelRejectButton.textContent = 'Отмена';
 
     approveButton.addEventListener('click', () => {
-        approveRequest(request.id, errorElement);
+        approveRequest(
+            request,
+            container,
+            errorElement,
+        );
     });
 
     rejectButton.addEventListener('click', () => {
+        hideRequestError(errorElement);
         rejectForm.classList.remove('hidden');
         rejectReason.focus();
     });
@@ -194,13 +257,14 @@ function createRequestActions(request, errorElement) {
     cancelRejectButton.addEventListener('click', () => {
         rejectReason.value = '';
         rejectForm.classList.add('hidden');
-        errorElement.classList.add('hidden');
+        hideRequestError(errorElement);
     });
 
     confirmRejectButton.addEventListener('click', () => {
         rejectRequest(
-            request.id,
+            request,
             rejectReason.value,
+            container,
             errorElement,
         );
     });
@@ -290,7 +354,11 @@ function renderRequests(requests) {
     requestsList.replaceChildren();
 
     if (requests.length === 0) {
-        listMessage.textContent = 'Заявок пока нет.';
+        listMessage.textContent =
+            statusFilter.value
+                ? 'Заявок с выбранным статусом нет.'
+                : 'Заявок пока нет.';
+
         listMessage.classList.remove('hidden');
         return;
     }
@@ -303,6 +371,13 @@ function renderRequests(requests) {
 }
 
 async function loadRequests() {
+    if (isLoadingRequests) {
+        return;
+    }
+
+    isLoadingRequests = true;
+    statusFilter.disabled = true;
+
     listMessage.textContent = 'Загрузка заявок...';
     listMessage.classList.remove('hidden');
 
@@ -329,11 +404,22 @@ async function loadRequests() {
     } catch (error) {
         listMessage.textContent =
             `Не удалось загрузить заявки: ${error.message}`;
+    } finally {
+        isLoadingRequests = false;
+        statusFilter.disabled = false;
     }
 }
 
 async function handleSubmit(event) {
     event.preventDefault();
+
+    if (isSubmitting) {
+        return;
+    }
+
+    if (!requestForm.reportValidity()) {
+        return;
+    }
 
     hideFormError();
 
@@ -345,6 +431,10 @@ async function handleSubmit(event) {
         endDate: formData.get('endDate'),
         reason: formData.get('reason'),
     };
+
+    isSubmitting = true;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Отправка...';
 
     try {
         const response = await fetch('/api/requests', {
@@ -362,11 +452,17 @@ async function handleSubmit(event) {
             return;
         }
 
+        requestForm.reset();
+
         await loadRequests();
     } catch (error) {
         showFormError(
             `Не удалось отправить заявку: ${error.message}`,
         );
+    } finally {
+        isSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = 'Отправить заявку';
     }
 }
 
