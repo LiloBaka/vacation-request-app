@@ -17,8 +17,13 @@ function addRequest(request) {
     return request;
 }
 
+function clearRequests() {
+    requests.length = 0;
+}
+
 module.exports = {
     getAllRequests,
     findRequestById,
     addRequest,
+    clearRequests,
 };
